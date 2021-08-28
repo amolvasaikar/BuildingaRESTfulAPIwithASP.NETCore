@@ -12,6 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.OpenApi.Models;
+using RESTful_API_with_ASP.NET_Core.Services;
 
 namespace RESTful_API_with_ASP.NET_Core
 {
@@ -28,9 +31,19 @@ namespace RESTful_API_with_ASP.NET_Core
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddSwaggerGen(swagger =>
+            {
+                swagger.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Demo Employee API",
+                    Version = "v1.1",
+                    Description = "API to unerstand request and response schema.",
+                });
+            });
             var connectionString = Configuration["ConnectionStrings:libraryDBConnectionString"];
             services.AddDbContext<LibraryContext>(o => o.UseSqlServer(connectionString));
+            services.AddScoped<ILibraryRepository, LibraryRepository>();
 
         }
 
@@ -41,18 +54,32 @@ namespace RESTful_API_with_ASP.NET_Core
             {
                 app.UseDeveloperExceptionPage();
             }
+            else
+            {
+                app.UseExceptionHandler();
+            }
 
             libraryContext.EnsureSeedDataForContext();
 
             app.UseHttpsRedirection();
 
+
             app.UseRouting();
 
             app.UseAuthorization();
 
+            
+
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+            });
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Demo Employee API");
             });
         }
     }
